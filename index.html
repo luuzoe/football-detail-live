@@ -4,38 +4,42 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>အသေးစိတ် ဘောလုံး Live - Live Scores, Stats, Lineups</title>
-<meta name="description" content="FotMob ပုံစံ အသေးစိတ် ဘောလုံးရလဒ်ဆိုက်။ Live score, ပွဲအသေးစိတ် stats, လူစာရင်း, အဆင့်ဇယား။">
-<link rel="stylesheet" href="styles.css?v=1">
+<meta name="description" content="FotMob ပုံစံ အသေးစိတ် ဘောလုံးရလဒ်ဆိုက်။ Live score, ပွဲအသေးစိတ် stats, လူစာရင်း, အဆင့်ဇယား, ဂိုးသွင်း, သတင်း။">
+<link rel="preconnect" href="https://site.api.espn.com">
+<link rel="preconnect" href="https://a.espncdn.com">
+<link rel="stylesheet" href="styles.css?v=3">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
 </head>
 <body>
 <header class="top">
-  <div class="brand">⚽ <b>အသေးစိတ် ဘောလုံး</b> <span class="sub">Live Detail</span></div>
-  <div class="topnote">မြန်မာစံတော်ချိန် • ၆၀ စက္ကန့်တစ်ခါ auto-refresh</div>
+  <div class="brand">⚽ <b>အသေးစိတ် ဘောလုံး</b></div>
+  <div class="topnote">Live • Stats • Lineups • Standings</div>
 </header>
 
 <div class="leagues" id="leagues"></div>
 
 <div class="toolbar">
   <div class="dates" id="dates"></div>
-  <input id="search" type="search" placeholder="အသင်းရှာပါ… (ဥပမာ Arsenal)" autocomplete="off">
+  <div class="searchrow">
+    <input id="search" type="search" placeholder="အသင်းရှာပါ… (ဥပမာ Arsenal)" autocomplete="off">
+    <button id="favBtn" class="favbtn" onclick="toggleFavOnly()">⭐ အကြိုက်ဆုံး</button>
+  </div>
 </div>
 
-<div class="tabs">
-  <button id="tabMatches" class="tab active" onclick="setTab('matches')">📅 ပွဲစဉ်များ</button>
-  <button id="tabStandings" class="tab" onclick="setTab('standings')">📊 အဆင့်ဇယား</button>
-  <button id="tabScorers" class="tab" onclick="setTab('scorers')">🎯 ဂိုးသွင်းအများဆုံး</button>
-  <button id="tabNews" class="tab" onclick="setTab('news')">📰 သတင်း</button>
-  <button id="favBtn" class="tab fav" onclick="toggleFavOnly()">⭐ အကြိုက်ဆုံးသာ</button>
-</div>
+<main id="app"><div class="skel"></div><div class="skel"></div><div class="skel"></div></main>
 
-<main id="app"><p class="loading">ပွဲစဉ်များ တင်နေသည်…</p></main>
+<nav class="bottomnav">
+  <button id="navMatches" class="navbtn active" onclick="setTab('matches')">📅<span>ပွဲစဉ်</span></button>
+  <button id="navStandings" class="navbtn" onclick="setTab('standings')">📊<span>အဆင့်</span></button>
+  <button id="navScorers" class="navbtn" onclick="setTab('scorers')">🎯<span>ဂိုးသွင်း</span></button>
+  <button id="navNews" class="navbtn" onclick="setTab('news')">📰<span>သတင်း</span></button>
+</nav>
 
 <footer>
-  <p>ဒေတာ: ESPN အများပြည်သူဆိုင်ရာ API (live score / stats / lineups) • xG နဲ့ ကစားသမား rating တွေက FotMob ရဲ့ ကိုယ်ပိုင် ဒေတာဖြစ်လို့ ESPN မှာ အခမဲ့ မရပါ — ဒါကြောင့် v1 မှာ မပါသေးပါ။</p>
+  <p>ဒေတာ: ESPN အများပြည်သူဆိုင်ရာ API • xG / shot map / ကစားသမား rating / ဒဏ်ရာ / transfer အပြည့်အစုံက paid API မှသာ ရနိုင်ပါတယ်။</p>
   <p class="small">KZZ ဆိုက်နဲ့ လုံးဝ သီးခြားဆိုက် ဖြစ်ပါသည်။</p>
 </footer>
 
-<script src="app.js?v=2"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>
