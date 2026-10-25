@@ -59,12 +59,14 @@ function renderDates(){
   $('dates').innerHTML = [-1,0,1].map(o =>
     '<button class="' + (o === state.day ? 'active' : '') + '" onclick="pickDay(' + o + ')">' + labels[o] + '<br><small>' + esc(yangonLabel(o)) + '</small></button>').join('');
 }
-function pickLeague(id){ state.league = id; state.detail = null; renderLeagues(); load(); }
-function pickDay(o){ state.day = o; state.detail = null; renderDates(); load(); }
+function pickLeague(id){ state.league = id; state.detail = null; state.team = null; renderLeagues(); load(); }
+function pickDay(o){ state.day = o; state.detail = null; state.team = null; renderDates(); load(); }
 function setTab(t){
-  state.tab = t; state.detail = null;
+  state.tab = t; state.detail = null; state.team = null;
   $('tabMatches').className = 'tab' + (t === 'matches' ? ' active' : '');
   $('tabStandings').className = 'tab' + (t === 'standings' ? ' active' : '');
+  $('tabScorers').className = 'tab' + (t === 'scorers' ? ' active' : '');
+  $('tabNews').className = 'tab' + (t === 'news' ? ' active' : '');
   load();
 }
 function toggleFavOnly(){
@@ -86,7 +88,10 @@ function starBtn(id){
 
 async function load(){
   if (state.detail) { renderDetail(); return; }
+  if (state.team) { renderTeam(); return; }
   if (state.tab === 'standings') return loadStandings();
+  if (state.tab === 'scorers') return loadScorers();
+  if (state.tab === 'news') return loadNews();
   $('app').innerHTML = '<p class="loading">ပွဲစဉ်များ တင်နေသည်…</p>';
   try {
     const d = await getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + state.league + '/scoreboard?dates=' + yangonDate(state.day));
@@ -167,7 +172,7 @@ async function openDetail(eventId){
     $('app').innerHTML = '<p class="empty">အသေးစိတ် ဆွဲမရပါ။ (' + esc(e.message) + ')</p><button class="back" onclick="backToList()">← ပြန်သွားပါ</button>';
   }
 }
-function backToList(){ state.detail = null; renderMatches(); }
+function backToList(){ state.detail = null; state.team = null; load(); }
 
 function statMap(team){
   const m = {};
@@ -252,18 +257,123 @@ function renderDetail(){
   });
   if (!lineupHtml) lineupHtml = '<p class="empty">လူစာရင်း မထုတ်ပြန်သေးပါ။</p>';
 
+  let h2hHtml = '';
+  const h2h = (d.seasonseries || []).find(s => s.type === 'head-to-head');
+  if (h2h){
+    h2hHtml = '<h3>⚔️ ထိပ်တိုက်တွေ့ဆုံမှု (H2H)</h3><p style="font-size:14px">' + esc(h2h.summary || h2h.seriesScore || '') + ' • ' + esc(h2h.shortSummary || 'နောက်ဆုံးတွေ့ဆုံမှုများ') + '</p>';
+    if (h2h.events && h2h.events.length){
+      h2hHtml += '<ul class="timeline">' + h2h.events.slice(0, 5).map(e => {
+        const comps = e.competitors || [];
+        const hh = comps.find(x => x.homeAway === 'home'); const aa = comps.find(x => x.homeAway === 'away');
+        const hs = hh && hh.score != null ? hh.score : ''; const as = aa && aa.score != null ? aa.score : '';
+        return '<li><span class="min">' + esc(myDate(e.date)) + '</span><span>' + esc(teamName(hh && hh.team)) + ' ' + esc(hs) + ' - ' + esc(as) + ' ' + esc(teamName(aa && aa.team)) + '</span></li>';
+      }).join('') + '</ul>';
+    }
+  }
+  let formHtml = '<h3>📈 နောက်ဆုံး ၅ ပွဲ Form</h3>';
+  (d.lastFiveGames || []).forEach(x => {
+    formHtml += '<p style="font-size:14px;font-weight:700;margin:10px 0 4px">' + esc(teamName(x.team)) + '</p>';
+    formHtml += '<p style="margin:0 0 8px">' + (x.events || []).map(ev => resultBadge(ev.gameResult || '?')).join(' ') +
+      ' <span style="color:#9fb0ba;font-size:13px">' + (x.events || []).map(ev => esc(ev.opponent ? ev.opponent.displayName : '') + ' ' + esc(ev.score || '')).join(' • ') + '</span></p>';
+  });
+
   $('app').innerHTML = '<div class="detail"><button class="back" onclick="backToList()">← ပွဲစဉ်များ ပြန်သွားပါ</button>' +
     '<div class="scorehead"><div class="lg">' + esc(lg ? lg.my : '') + ' • ' + esc(statusTxt) + '</div>' +
-    '<div class="teams2"><div><img src="' + esc(logo(home.team)) + '" alt=""><div>' + esc(teamName(home.team)) + '</div></div>' +
+    '<div class="teams2"><div onclick="openTeam(\'' + (home.team && home.team.id) + '\')" style="cursor:pointer"><img src="' + esc(logo(home.team)) + '" alt=""><div>' + esc(teamName(home.team)) + '</div><small style="color:#7fd08a">အသင်းစာမျက်နှာ →</small></div>' +
     '<div class="big">' + esc(home.score == null ? '-' : home.score) + ' - ' + esc(away.score == null ? '-' : away.score) + '</div>' +
-    '<div><img src="' + esc(logo(away.team)) + '" alt=""><div>' + esc(teamName(away.team)) + '</div></div></div>' +
+    '<div onclick="openTeam(\'' + (away.team && away.team.id) + '\')" style="cursor:pointer"><img src="' + esc(logo(away.team)) + '" alt=""><div>' + esc(teamName(away.team)) + '</div><small style="color:#7fd08a">အသင်းစာမျက်နှာ →</small></div></div>' +
     '<div class="meta">' + esc(venue) + esc(att) + (broadcasts ? '<br>📺 ' + esc(broadcasts) : '') + '</div></div>' +
     '<h3>⏱️ ပွဲဖြစ်စဉ် (Timeline)</h3>' + tlHtml +
     '<h3>📊 ပွဲအတွင်း Stats နှိုင်းယှဉ်</h3><p style="font-size:13px;color:#9fb0ba;text-align:center">' + esc(teamName(home.team)) + ' (အစိမ်း) vs ' + esc(teamName(away.team)) + ' (မီးခိုး)</p>' + statsHtml +
     '<h3>👥 လူစာရင်း (Lineups)</h3><div class="lineup">' + lineupHtml + '</div>' +
+    h2hHtml + formHtml +
     '</div>';
 }
 
+function myDate(iso){
+  try { return new Intl.DateTimeFormat('en-GB', {timeZone:'Asia/Yangon', day:'2-digit', month:'short'}).format(new Date(iso)); }
+  catch(e){ return ''; }
+}
+function resultBadge(r){
+  const c = r === 'W' ? '#1db954' : (r === 'L' ? '#ff5252' : '#9fb0ba');
+  return '<span style="display:inline-block;min-width:22px;text-align:center;background:' + c + ';color:#06130a;font-weight:800;border-radius:5px;padding:1px 3px;font-size:12px">' + esc(r) + '</span>';
+}
+async function loadScorers(){
+  $('app').innerHTML = '<p class="loading">ဂိုးသွင်းအများဆုံး တင်နေသည်…</p>';
+  try {
+    const d = await getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + state.league + '/statistics');
+    const lg = LEAGUES.find(l => l.id === state.league);
+    const renderList = (statName, title, valLabel) => {
+      const s = (d.stats || []).find(x => x.name === statName);
+      if (!s || !s.leaders.length) return '<p class="empty">' + title + ' မရပါ။</p>';
+      let h = '<p class="section">' + title + '</p><div class="detail"><table><tr><th class="num">#</th><th>ကစားသမား</th><th>အသင်း</th><th class="num">' + valLabel + '</th></tr>';
+      s.leaders.slice(0, 20).forEach((l, i) => {
+        const a = l.athlete || {}; const t = a.team || {};
+        h += '<tr><td class="num">' + (i + 1) + '</td><td>' + esc(a.displayName || '') + '</td><td class="teamcell"><img src="' + esc(logo(t)) + '" alt="">' + esc(teamName(t)) + '</td><td class="num"><b>' + esc(l.value) + '</b></td></tr>';
+      });
+      return h + '</table></div>';
+    };
+    $('app').innerHTML = '<p class="section">' + esc(lg.my) + ' • ရာသီစာရင်း</p>' +
+      renderList('goalsLeaders', '⚽ ဂိုးသွင်းအများဆုံး (အယောက် ၂၀)', 'ဂိုး') +
+      renderList('assistsLeaders', '🅰 ဂိုးဖန်တီးအများဆုံး (အယောက် ၂၀)', 'ဖန်တီးမှု');
+  } catch(e) {
+    $('app').innerHTML = '<p class="empty">ဂိုးသွင်းစာရင်း ဆွဲမရပါ။ (' + esc(e.message) + ')</p>';
+  }
+}
+async function loadNews(){
+  $('app').innerHTML = '<p class="loading">သတင်း တင်နေသည်…</p>';
+  try {
+    const d = await getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + state.league + '/news?limit=20');
+    const lg = LEAGUES.find(l => l.id === state.league);
+    const arts = d.articles || [];
+    if (!arts.length){ $('app').innerHTML = '<p class="empty">သတင်း မရှိပါ။</p>'; return; }
+    $('app').innerHTML = '<p class="section">' + esc(lg.my) + ' • သတင်းများ (ESPN, အင်္ဂလိပ်လို)</p>' + arts.map(a => {
+      const img = (a.images && a.images[0] && a.images[0].url) || '';
+      const href = (a.links && a.links.web && a.links.web.href) || '#';
+      return '<a class="match" style="text-decoration:none" href="' + esc(href) + '" target="_blank" rel="noopener">' +
+        (img ? '<img src="' + esc(img) + '" alt="" style="width:72px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0">' : '') +
+        '<span class="teams"><span style="font-weight:700;line-height:1.4">' + esc(a.headline || '') + '</span><br><small style="color:#9fb0ba">' + esc(a.description || '') + '</small></span></a>';
+    }).join('');
+  } catch(e) {
+    $('app').innerHTML = '<p class="empty">သတင်း ဆွဲမရပါ။ (' + esc(e.message) + ')</p>';
+  }
+}
+async function openTeam(teamId){
+  state.team = {id: String(teamId), info: null, sched: null, news: null};
+  $('app').innerHTML = '<p class="loading">အသင်းအချက်အလက် တင်နေသည်…</p>';
+  try {
+    const info = await getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + state.league + '/teams/' + encodeURIComponent(teamId)).catch(() => null);
+    const sched = await getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + state.league + '/teams/' + encodeURIComponent(teamId) + '/schedule').catch(() => null);
+    if (state.team) { state.team.info = info; state.team.sched = sched; }
+    renderTeam();
+  } catch(e) {
+    $('app').innerHTML = '<p class="empty">အသင်းအချက်အလက် ဆွဲမရပါ။ (' + esc(e.message) + ')</p><button class="back" onclick="backToList()">← ပြန်သွားပါ</button>';
+  }
+}
+function renderTeam(){
+  const t = state.team; if (!t) return;
+  const info = (t.info && t.info.team) || {};
+  const rec = info.record && info.record.items && info.record.items[0];
+  let recTxt = '';
+  if (rec){
+    const gm = {}; (rec.stats || []).forEach(s => { gm[s.name] = s.value; });
+    recTxt = 'ပွဲ ' + (gm.gamesPlayed || '-') + ' • နိုင် ' + (gm.wins || '-') + ' • သရေ ' + (gm.ties || '-') + ' • ရှုံး ' + (gm.losses || '-') + ' • အမှတ် ' + (gm.points || '-') + ' • အဆင့် ' + (gm.rank || '-');
+  }
+  const evs = (t.sched && t.sched.events) || [];
+  let schedHtml = '<p class="empty">နောက်ဆုံးပွဲများ မရပါ။</p>';
+  if (evs.length){
+    schedHtml = '<ul class="timeline">' + evs.slice(0, 10).map(e => {
+      const c = e.competitions && e.competitions[0];
+      const st = (c && c.status && c.status.type) || {};
+      return '<li><span class="min">' + esc(myDate(e.date)) + '</span><span>' + esc(e.name || '') + ' — <b>' + esc(st.shortDetail || '') + '</b></span></li>';
+    }).join('') + '</ul>';
+  }
+  $('app').innerHTML = '<div class="detail"><button class="back" onclick="backToList()">← ပြန်သွားပါ</button>' +
+    '<div class="scorehead"><img src="' + esc(logo(info)) + '" alt="" style="width:64px;height:64px;object-fit:contain"><div style="font-size:22px;font-weight:900;margin-top:6px">' + esc(teamName(info) || ('အသင်း ' + t.id)) + '</div>' +
+    '<div class="meta">' + esc(recTxt) + (info.abbreviation ? '<br>ကုဒ်: ' + esc(info.abbreviation) : '') + '</div></div>' +
+    '<h3>🕐 နောက်ဆုံးပွဲများ</h3>' + schedHtml +
+    '<p style="font-size:13px;color:#9fb0ba">မှတ်ချက်: လူစာရင်း အပြည့်အစုံ (squad) က ESPN ရဲ့ အခမဲ့ဒေတာမှာ မမှန်တာများလို့ (KZZ တုန်းကလည်း ဒီပြဿနာပဲ ရှိခဲ့တယ်) ဒီ v2 မှာ မထည့်ထားသေးပါ။ ပွဲထွက် လူစာရင်းကိုတော့ ပွဲအသေးစိတ်မှာ ကြည့်လို့ရပါတယ်။</p></div>';
+}
 async function loadStandings(){
   $('app').innerHTML = '<p class="loading">အဆင့်ဇယား တင်နေသည်…</p>';
   try {
@@ -276,7 +386,7 @@ async function loadStandings(){
     entries.forEach((e, i) => {
       const t = e.team || {};
       const hl = isFav(t.id) ? ' class="hl"' : '';
-      html += '<tr' + hl + '><td class="num">' + (i + 1) + '</td><td class="teamcell"><img src="' + esc(logo(t)) + '" alt="">' + esc(teamName(t)) + '</td>' +
+      html += '<tr' + hl + ' onclick="openTeam(\'' + t.id + '\')" style="cursor:pointer"><td class="num">' + (i + 1) + '</td><td class="teamcell"><img src="' + esc(logo(t)) + '" alt="">' + esc(teamName(t)) + '</td>' +
         '<td class="num">' + esc(get(e, 'gamesPlayed')) + '</td><td class="num">' + esc(get(e, 'wins')) + '</td><td class="num">' + esc(get(e, 'ties')) + '</td><td class="num">' + esc(get(e, 'losses')) + '</td><td class="num">' + esc(get(e, 'pointDifferential')) + '</td><td class="num"><b>' + esc(get(e, 'points')) + '</b></td></tr>';
     });
     html += '</table></div>';
