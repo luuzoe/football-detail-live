@@ -111,21 +111,30 @@ async function loadMatches(){
   $('app').innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
   state.stale = false;
   if (state.league === 'all'){
-    const results = await Promise.allSettled(LEAGUES9.map(async lg => {
-      try {
-        const d = await getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + lg.id + '/scoreboard?dates=' + yangonDate(state.day));
-        const evs = d.events || [];
-        saveCache(lg.id, state.day, evs);
-        return {lg: lg.id, events: evs};
-      } catch(e) {
-        const cached = readCache(lg.id, state.day);
-        if (cached) { state.stale = true; return {lg: lg.id, events: cached}; }
-        return {lg: lg.id, events: []};
-      }
-    }));
+    const snapDay = state.day;
     state.events = [];
-    results.forEach(r => { if (r.status === 'fulfilled') (r.value.events || []).forEach(ev => { ev._lg = r.value.lg; state.events.push(ev); }); });
-    renderMatches();
+    let done = 0;
+    LEAGUES9.forEach(lg => {
+      getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + lg.id + '/scoreboard?dates=' + yangonDate(snapDay)).then(d => {
+        const evs = d.events || [];
+        saveCache(lg.id, snapDay, evs);
+        if (state.league !== 'all' || state.day !== snapDay || state.tab !== 'matches' || state.detail || state.team) return;
+        evs.forEach(ev => { ev._lg = lg.id; state.events.push(ev); });
+        renderMatches();
+      }).catch(e => {
+        const cached = readCache(lg.id, snapDay);
+        if (cached && state.league === 'all' && state.day === snapDay && state.tab === 'matches' && !state.detail && !state.team){
+          state.stale = true;
+          cached.forEach(ev => { ev._lg = lg.id; state.events.push(ev); });
+          renderMatches();
+        }
+      }).finally(() => {
+        done++;
+        if (done === LEAGUES9.length && state.league === 'all' && state.day === snapDay && state.tab === 'matches' && !state.detail && !state.team && !state.events.length){
+          $('app').innerHTML = '<p class="empty">ဒီရက်အတွက် ပွဲစဉ် မရှိပါ။</p>';
+        }
+      });
+    });
     return;
   }
   try {
