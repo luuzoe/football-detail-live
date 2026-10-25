@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>အသေးစိတ် ဘောလုံး Live - Live Scores, Stats, Lineups</title>
+<meta name="description" content="FotMob ပုံစံ အသေးစိတ် ဘောလုံးရလဒ်ဆိုက်။ Live score, ပွဲအသေးစိတ် stats, လူစာရင်း, အဆင့်ဇယား။">
+<link rel="stylesheet" href="styles.css?v=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+</head>
+<body>
+<header class="top">
+  <div class="brand">⚽ <b>အသေးစိတ် ဘောလုံး</b> <span class="sub">Live Detail</span></div>
+  <div class="topnote">မြန်မာစံတော်ချိန် • ၆၀ စက္ကန့်တစ်ခါ auto-refresh</div>
+</header>
+
+<div class="leagues" id="leagues"></div>
+
+<div class="toolbar">
+  <div class="dates" id="dates"></div>
+  <input id="search" type="search" placeholder="အသင်းရှာပါ… (ဥပမာ Arsenal)" autocomplete="off">
+</div>
+
+<div class="tabs">
+  <button id="tabMatches" class="tab active" onclick="setTab('matches')">📅 ပွဲစဉ်များ</button>
+  <button id="tabStandings" class="tab" onclick="setTab('standings')">📊 အဆင့်ဇယား</button>
+  <button id="favBtn" class="tab fav" onclick="toggleFavOnly()">⭐ အကြိုက်ဆုံးသာ</button>
+</div>
+
+<main id="app"><p class="loading">ပွဲစဉ်များ တင်နေသည်…</p></main>
+
+<footer>
+  <p>ဒေတာ: ESPN အများပြည်သူဆိုင်ရာ API (live score / stats / lineups) • xG နဲ့ ကစားသမား rating တွေက FotMob ရဲ့ ကိုယ်ပိုင် ဒေတာဖြစ်လို့ ESPN မှာ အခမဲ့ မရပါ — ဒါကြောင့် v1 မှာ မပါသေးပါ။</p>
+  <p class="small">KZZ ဆိုက်နဲ့ လုံးဝ သီးခြားဆိုက် ဖြစ်ပါသည်။</p>
+</footer>
+
+<script src="app.js?v=1"></script>
+</body>
+</html>
