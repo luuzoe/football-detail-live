@@ -7,13 +7,15 @@
 <meta name="description" content="FotMob ပုံစံ အသေးစိတ် ဘောလုံးရလဒ်ဆိုက်။ Live score, ပွဲအသေးစိတ် stats, လူစာရင်း, အဆင့်ဇယား, ဂိုးသွင်း, သတင်း။">
 <link rel="preconnect" href="https://site.api.espn.com">
 <link rel="preconnect" href="https://a.espncdn.com">
-<link rel="stylesheet" href="styles.css?v=3">
+<script>try{document.documentElement.dataset.theme = localStorage.getItem('fdl-theme') || 'dark';}catch(e){}</script>
+<link rel="stylesheet" href="styles.css?v=5">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
 </head>
 <body>
 <header class="top">
-  <div class="brand">⚽ <b>အသေးစိတ် ဘောလုံး</b></div>
-  <div class="topnote">Live • Stats • Lineups • Standings</div>
+  <div><div class="brand">⚽ <b>အသေးစိတ် ဘောလုံး</b></div>
+  <div class="topnote">Live • Stats • Lineups • Standings</div></div>
+  <button class="themebtn" id="themeBtn" onclick="toggleTheme()">☀️ အလင်း</button>
 </header>
 
 <div class="leagues" id="leagues"></div>
@@ -22,6 +24,7 @@
   <div class="dates" id="dates"></div>
   <div class="searchrow">
     <input id="search" type="search" placeholder="အသင်းရှာပါ… (ဥပမာ Arsenal)" autocomplete="off">
+    <button id="liveBtn" class="livebtn" onclick="toggleLiveOnly()">🔴 Live သာ</button>
     <button id="favBtn" class="favbtn" onclick="toggleFavOnly()">⭐ အကြိုက်ဆုံး</button>
   </div>
 </div>
@@ -37,9 +40,9 @@
 
 <footer>
   <p>ဒေတာ: ESPN အများပြည်သူဆိုင်ရာ API • xG / shot map / ကစားသမား rating / ဒဏ်ရာ / transfer အပြည့်အစုံက paid API မှသာ ရနိုင်ပါတယ်။</p>
-  <p class="small">KZZ ဆိုက်နဲ့ လုံးဝ သီးခြားဆိုက် ဖြစ်ပါသည်။</p>
+  <p class="small">KZZ ဆိုက်နဲ့ လုံးဝ သီးခြားဆိုက် ဖြစ်ပါသည်။ • ဆိုက်ဗားရှင်း v4 • 2026-10-25 (ဒီ v4 မမြင်ရရင် browser ကို refresh လုပ်ပေးပါ)</p>
 </footer>
 
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>
